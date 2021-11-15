@@ -18,7 +18,9 @@
 package io.github.evacchi.channels;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousServerSocketChannel;
@@ -46,6 +48,14 @@ public interface Channels {
             socketChannel.accept(null, handleResult(f));
             return f.thenApply(Socket::new);
         }
+
+        public SocketAddress address() {
+            try {
+                return socketChannel.getLocalAddress();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
     }
 
     class Socket {
@@ -54,6 +64,22 @@ public interface Channels {
 
         public static Socket open() throws IOException {
             return new Socket(AsynchronousSocketChannel.open());
+        }
+
+        public SocketAddress localAddress() {
+            try {
+                return channel.getLocalAddress();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+
+        public SocketAddress remoteAddress() {
+            try {
+                return channel.getRemoteAddress();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
 
         public CompletableFuture<Socket> connect(String host, int port) {
